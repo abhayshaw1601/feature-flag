@@ -1,0 +1,386 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum SdkKeyType {
+  SERVER
+  CLIENT
+}
+
+enum FlagType {
+  RELEASE
+  OPS
+  EXPERIMENT
+  PERMISSION
+}
+
+enum ExperimentStatus {
+  DRAFT
+  RUNNING
+  COMPLETED
+  STOPPED
+}
+
+enum AiRunStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+enum ChatRole {
+  USER
+  ASSISTANT
+  TOOL
+}
+
+enum AuditAction {
+  FLAG_CREATED
+  FLAG_UPDATED
+  ENVIRONMENT_UPDATED
+  FLAG_ARCHIVED
+  FLAG_RESTORED
+  SDK_KEY_CREATED
+  SDK_KEY_REVOKED
+  AUTO_ROLLBACK
+  AUTO_RAMP
+  EXPERIMENT_UPDATED
+}
+
+model User {
+  id          String   @id @default(cuid())
+  githubId    String   @unique
+  name        String
+  email       String?  @unique
+  avatarUrl   String?
+  emailVerified DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  accounts    Account[]
+  sessions    Session[]
+  memberships Member[]
+  ownedFlags  Flag[]       @relation("FlagOwner")
+  auditEvents AuditEvent[] @relation("AuditActor")
+  chatThreads ChatThread[]
+}
+
+model Workspace {
+  id             String       @id @default(cuid())
+  name           String
+  slug           String       @unique
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  members        Member[]
+  projects       Project[]
+  repositories   Repository[]
+  aiRuns         AiRun[]
+  chatThreads    ChatThread[]
+}
+
+model Member {
+  id          String     @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        MemberRole
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  workspaceId String
+  name        String
+  key         String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  environments Environment[]
+  flags       Flag[]
+  auditEvents AuditEvent[]
+
+  @@unique([workspaceId, key])
+  @@index([workspaceId, createdAt])
+}
+
+model Environment {
+  id             String             @id @default(cuid())
+  projectId      String
+  name           String
+  key            String
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  project        Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sdkKeys        SdkKey[]
+  flagConfigs    FlagEnvironment[]
+  auditEvents    AuditEvent[]
+  exposureEvents ExposureEvent[]
+  metricEvents   MetricEvent[]
+
+  @@unique([projectId, key])
+  @@index([projectId, createdAt])
+}
+
+model SdkKey {
+  id            String      @id @default(cuid())
+  environmentId String
+  name          String
+  type          SdkKeyType
+  hashedKey     String      @unique
+  prefix        String
+  createdAt     DateTime    @default(now())
+  revokedAt     DateTime?
+  lastUsedAt    DateTime?
+
+  environment   Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+
+  @@index([environmentId, type])
+}
+
+model Flag {
+  id            String             @id @default(cuid())
+  projectId     String
+  key           String
+  name          String
+  description   String?
+  type          FlagType
+  tags          String[]           @default([])
+  ownerId       String?
+  archivedAt    DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  project       Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  owner         User?              @relation("FlagOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  environments  FlagEnvironment[]
+  auditEvents   AuditEvent[]
+  experiment    Experiment?
+
+  @@unique([projectId, key])
+  @@index([projectId, archivedAt, updatedAt])
+  @@index([ownerId])
+}
+
+model FlagEnvironment {
+  id             String      @id @default(cuid())
+  flagId         String
+  environmentId  String
+  enabled        Boolean     @default(false)
+  rules          Json        @db.JsonB
+  rolloutPercent Int         @default(0)
+  offValue       Json        @db.JsonB
+  onValue        Json        @db.JsonB
+  version        Int         @default(1)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  flag           Flag        @relation(fields: [flagId], references: [id], onDelete: Cascade)
+  environment    Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+
+  @@unique([flagId, environmentId])
+  @@index([environmentId, version])
+  @@index([flagId, updatedAt])
+}
+
+model AuditEvent {
+  id            String       @id @default(cuid())
+  projectId     String
+  flagId        String?
+  environmentId String?
+  actorId       String?
+  actorName     String?
+  action        AuditAction
+  before        Json?        @db.JsonB
+  after         Json?        @db.JsonB
+  summary       String
+  createdAt     DateTime     @default(now())
+
+  project       Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  flag          Flag?        @relation(fields: [flagId], references: [id], onDelete: SetNull)
+  environment   Environment? @relation(fields: [environmentId], references: [id], onDelete: SetNull)
+  actor         User?        @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt])
+  @@index([flagId, createdAt])
+  @@index([environmentId, createdAt])
+}
+
+model ExposureEvent {
+  id            String      @id @default(cuid())
+  environmentId String
+  flagKey       String
+  variation     String
+  userHash      String
+  createdAt     DateTime    @default(now())
+
+  environment   Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+
+  @@index([environmentId, flagKey, createdAt])
+}
+
+model MetricEvent {
+  id            String      @id @default(cuid())
+  environmentId String
+  flagKey       String
+  variation     String
+  metric        String
+  value         Float
+  createdAt     DateTime    @default(now())
+
+  environment   Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+
+  @@index([environmentId, flagKey, metric, createdAt])
+}
+
+model Repository {
+  id             String          @id @default(cuid())
+  workspaceId    String
+  githubRepoId   String
+  fullName       String
+  installationId String
+  lastScannedAt  DateTime?
+  createdAt      DateTime        @default(now())
+
+  workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  references     FlagReference[]
+
+  @@unique([workspaceId, githubRepoId])
+  @@index([workspaceId, fullName])
+}
+
+model FlagReference {
+  id           String     @id @default(cuid())
+  repositoryId String
+  flagKey      String
+  filePath     String
+  line         Int
+  snippet      String
+  lastSeenAt   DateTime
+
+  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@unique([repositoryId, flagKey, filePath, line])
+  @@index([repositoryId, flagKey])
+}
+
+model Experiment {
+  id               String           @id @default(cuid())
+  flagId           String           @unique
+  name             String
+  primaryMetric    String
+  guardrailMetrics String[]         @default([])
+  minimumSampleSize Int              @default(1000)
+  status           ExperimentStatus @default(DRAFT)
+  startedAt        DateTime?
+  endedAt          DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  flag             Flag             @relation(fields: [flagId], references: [id], onDelete: Cascade)
+}
+
+model AiRun {
+  id          String      @id @default(cuid())
+  workspaceId String
+  feature     String
+  input       Json        @db.JsonB
+  output      Json?       @db.JsonB
+  model       String
+  latencyMs   Int
+  tokensIn    Int?
+  tokensOut   Int?
+  status      AiRunStatus @default(PENDING)
+  error       String?
+  createdAt   DateTime    @default(now())
+
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, feature, createdAt])
+}
+
+model ChatThread {
+  id          String        @id @default(cuid())
+  workspaceId String
+  userId      String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    ChatMessage[]
+
+  @@index([workspaceId, updatedAt])
+}
+
+model ChatMessage {
+  id        String    @id @default(cuid())
+  threadId  String
+  role      ChatRole
+  content   String
+  toolCalls Json?     @db.JsonB
+  createdAt DateTime  @default(now())
+
+  thread    ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}

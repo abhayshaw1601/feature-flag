@@ -1,0 +1,55 @@
+{
+  "name": "flagforge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FlagForge feature flag control plane foundation",
+  "workspaces": ["packages/contracts"],
+  "scripts": {
+    "dev": "next dev",
+    "build": "npm run contracts:build && prisma generate && next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "contracts:build": "tsc -p packages/contracts/tsconfig.json",
+    "db:generate": "prisma generate",
+    "db:validate": "prisma validate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:setup": "prisma migrate deploy && prisma db seed",
+    "test": "npm run contracts:build && npm run db:validate && npm run typecheck && npm run lint && npm run format:check"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@fontsource/inter": "5.1.1",
+    "@fontsource/jetbrains-mono": "5.1.1",
+    "@prisma/client": "6.14.0",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "lucide-react": "0.468.0",
+    "next": "15.5.6",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "tailwind-merge": "3.0.2",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "3.2.0",
+    "@types/node": "22.10.2",
+    "@types/react": "19.0.3",
+    "@types/react-dom": "19.0.2",
+    "autoprefixer": "10.4.20",
+    "eslint": "9.16.0",
+    "eslint-config-next": "15.5.6",
+    "postcss": "8.4.49",
+    "prettier": "3.4.2",
+    "prisma": "6.14.0",
+    "tailwindcss": "3.4.17",
+    "tsx": "4.19.2",
+    "typescript": "5.7.2"
+  }
+}
