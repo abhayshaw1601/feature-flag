@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CreateFlagDialog } from "./create-flag-dialog";
+import { FlagCreationBar } from "./flag-creation-bar";
 import {
   CopyFlagKey,
   EnvironmentStatus,
@@ -30,6 +31,8 @@ export type FlagsPageProps = {
   members: Array<{ id: string; name: string }>;
   canCreate: boolean;
   environments: Array<{ key: string; name: string }>;
+  projectId?: string;
+  canGenerate?: boolean;
 };
 
 function FlagIdentity({ flag }: { flag: FlagSummary }) {
@@ -68,7 +71,15 @@ export function FlagsPage(props: FlagsPageProps) {
   return <ProjectFlags key={props.project.id} {...props} />;
 }
 
-function ProjectFlags({ initialData, project, members, canCreate, environments }: FlagsPageProps) {
+function ProjectFlags({
+  initialData,
+  project,
+  members,
+  canCreate,
+  environments,
+  projectId = project.id,
+  canGenerate = canCreate,
+}: FlagsPageProps) {
   const [query, setQuery] = useState<ListFlagsQuery>(() =>
     listFlagsQuerySchema.parse({
       page: initialData.pagination.page,
@@ -145,6 +156,12 @@ function ProjectFlags({ initialData, project, members, canCreate, environments }
           ) : null}
         </div>
       </header>
+
+      <FlagCreationBar
+        projectId={projectId}
+        canGenerate={canGenerate}
+        environments={environments}
+      />
 
       <section
         className="min-w-0 rounded-card border border-border bg-surface"

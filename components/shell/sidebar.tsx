@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { FlaskConical, Flag, GitBranch, Settings, Sparkles, ScrollText } from "lucide-react";
 import { WorkspaceSwitcher } from "@/components/shell/workspace-switcher";
 
@@ -6,7 +9,8 @@ const navGroups = [
   {
     label: "Manage",
     items: [
-      { label: "Flags", href: "/", icon: Flag, active: true },
+      { label: "Flags", href: "/", icon: Flag },
+      { label: "Stale flags", href: "/stale-flags", icon: GitBranch },
       { label: "Experiments", href: "/experiments", icon: FlaskConical },
     ],
   },
@@ -15,6 +19,7 @@ const navGroups = [
     items: [
       { label: "Audit log", href: "/audit", icon: ScrollText },
       { label: "Assistant", href: "/assistant", icon: Sparkles },
+      { label: "AI demo", href: "/ai", icon: Sparkles },
     ],
   },
   {
@@ -28,6 +33,7 @@ export function Sidebar({
 }: Readonly<{
   context: { workspace: { name: string }; user: { name: string; role: string } };
 }>) {
+  const pathname = usePathname();
   return (
     <aside
       className="hidden w-[240px] shrink-0 flex-col border-r border-border px-4 py-5 xl:flex"
@@ -54,16 +60,17 @@ export function Sidebar({
             <div className="space-y-1">
               {group.items.map((item) => {
                 const Icon = item.icon;
+                const active = pathname === item.href;
                 return (
                   <Link
                     key={item.label}
                     className={`flex min-h-9 items-center gap-3 rounded-control px-2 text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-                      item.active
+                      active
                         ? "bg-surface font-medium text-foreground"
                         : "text-muted hover:bg-surface hover:text-foreground"
                     }`}
                     href={item.href}
-                    aria-current={item.active ? "page" : undefined}
+                    aria-current={active ? "page" : undefined}
                   >
                     <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
                     <span>{item.label}</span>

@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "incremental": false
+  },
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx",
+    "../ui/**/*.tsx",
+    "../../app/ai/**/*.ts",
+    "../../app/ai/**/*.tsx",
+    "../../types/**/*.d.ts",
+    "../../next-env.d.ts"
+  ]
+}

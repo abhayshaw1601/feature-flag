@@ -1,6 +1,7 @@
 node_modules/
 .next/
 .next-*/
+.next-phase5-preview/
 out/
 coverage/
 .env
@@ -14,3 +15,4 @@ packages/contracts/dist/
 .agents/**
 package-lock.partial.json
 *.tsbuildinfo
+.taste-skill/*

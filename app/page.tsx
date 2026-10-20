@@ -4,6 +4,8 @@ import { AppShell } from "@/components/shell/app-shell";
 import { FlagsPage } from "@/components/flags/flags-page";
 import { loadFlags } from "@/lib/flags";
 import { prisma } from "@/lib/prisma";
+import { Suspense } from "react";
+import { AuditDashboardWidget } from "@/components/audit/audit-dashboard-widget";
 
 export const dynamic = "force-dynamic";
 
@@ -47,16 +49,25 @@ export default async function HomePage() {
         user: { name: membership.user.name ?? "GitHub user", role: membership.role },
       }}
     >
-      <FlagsPage
-        initialData={initialData}
-        project={{ id: project.id, name: project.name }}
-        members={membership.workspace.members.map(({ user }) => ({
-          id: user.id,
-          name: user.name ?? "Unnamed user",
-        }))}
-        environments={project.environments}
-        canCreate={membership.role !== "VIEWER"}
-      />
+      <div className="space-y-6">
+        <FlagsPage
+          initialData={initialData}
+          project={{ id: project.id, name: project.name }}
+          members={membership.workspace.members.map(({ user }) => ({
+            id: user.id,
+            name: user.name ?? "Unnamed user",
+          }))}
+          environments={project.environments}
+          canCreate={membership.role !== "VIEWER"}
+        />
+        <Suspense
+          fallback={
+            <div className="skeleton h-32 w-full" aria-label="Loading audit digest" role="status" />
+          }
+        >
+          <AuditDashboardWidget workspaceId={membership.workspaceId} />
+        </Suspense>
+      </div>
     </AppShell>
   );
 }

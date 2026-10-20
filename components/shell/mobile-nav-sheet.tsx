@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 
 const links = [
   ["Flags", "/"],
+  ["Stale flags", "/stale-flags"],
   ["Experiments", "/experiments"],
   ["Audit log", "/audit"],
   ["Assistant", "/assistant"],

@@ -98,6 +98,7 @@ The interface must look like a finished product, not a hackathon prototype.
 2. Use Lucide SVG icons only, at consistent sizes (16px inline, 20px in navigation, 24px max in empty states).
 3. Status is shown with text labels plus a small colored dot drawn in CSS, never with symbols or emoji.
 4. AI output is sanitized before display. The system prompt for every AI call says "Do not use emojis", and a server-side filter strips any emoji characters from model output as a backstop.
+5. only use gemini models for ai features.
 
 ### Design tokens
 
@@ -339,16 +340,18 @@ Depends on: Phase 0 contracts.
 
 ### Tasks
 
-- [ ] LLM client wrapper with model selection, timeouts (30 seconds), one retry, and streaming support.
-- [ ] Structured output helper: every call provides a Zod schema, the model returns JSON, the server validates it, and retries once with the validation error on failure.
-- [ ] Prompt registry: prompts stored as versioned files in `/prompts`, each with a system prompt, a user template, and the output schema name.
-- [ ] Global system rules added to every prompt: no emojis, plain professional tone, never invent flag keys, say when data is insufficient.
-- [ ] Output sanitizer: strips emoji characters and trims whitespace.
-- [ ] Tool definitions for later features: `list_flags`, `get_flag`, `get_audit_events`, `get_metrics`, `get_references`.
-- [ ] `AiRun` logging for every call (feature, input, output, latency, tokens).
-- [ ] Rate limit: 20 AI calls per user per minute. Daily workspace budget cap from an env variable.
-- [ ] Mock mode: `AI_MOCK=true` returns fixture outputs so UI work never blocks on the API.
-- [ ] Shared UI components: `AiPanel` (card with a "Generated" label and model note), `AiLoading` (skeleton with progress text), `AiError`, `AiFeedback` (thumbs up and down using Lucide icons).
+- [x] LLM client wrapper with model selection, timeouts (30 seconds), one retry, and streaming support.
+- [x] Structured output helper: every call provides a Zod schema, the model returns JSON, the server validates it, and retries once with the validation error on failure.
+- [x] Prompt registry: prompts stored as versioned files in `/prompts`, each with a system prompt, a user template, and the output schema name.
+- [x] Global system rules added to every prompt: no emojis, plain professional tone, never invent flag keys, say when data is insufficient.
+- [x] Output sanitizer: strips emoji characters and trims whitespace.
+- [x] Tool definitions for later features: `list_flags`, `get_flag`, `get_audit_events`, `get_metrics`, `get_references`.
+- [x] `AiRun` logging for every call (feature, input, output, latency, tokens).
+- [x] Rate limit: 20 AI calls per user per minute. Daily workspace budget cap from an env variable.
+- [x] Mock mode: `AI_MOCK=true` returns fixture outputs so UI work never blocks on the API.
+- [x] Shared UI components: `AiPanel` (card with a "Generated" label and model note), `AiLoading` (skeleton with progress text), `AiError`, `AiFeedback` (thumbs up and down using Lucide icons).
+
+Local implementation: `/ai` and `/api/ai/test`; see `docs/phase4-ai-platform.md` for checks and integration details. Limits and logging apply through the shared runner; independently developed feature adapters still need to adopt it. Daily budget is a logical-call cap, not a dollar estimate. Live Gemini, GitHub OAuth browser verification, and deployment remain pending.
 
 ### UI notes
 
@@ -395,12 +398,14 @@ Output (validated):
 
 ### Tasks
 
-- [ ] Prompt that receives the project's existing flag keys, known user attributes, and environments, so it avoids duplicate keys and uses real attributes.
-- [ ] Prompt rule: if the request is ambiguous, put the interpretation in `assumptions` instead of guessing silently.
-- [ ] UI: a command bar at the top of the Flags page ("Describe a flag in plain English") with example chips such as "Kill switch for payments".
-- [ ] Preview drawer: shows the flag as the dashboard would render it, with assumptions listed above Create and Edit buttons.
+- [x] Prompt that receives the project's existing flag keys, known user attributes, and environments, so it avoids duplicate keys and uses real attributes.
+- [x] Prompt rule: if the request is ambiguous, put the interpretation in `assumptions` instead of guessing silently.
+- [x] UI: a command bar at the top of the Flags page ("Describe a flag in plain English") with example chips such as "Kill switch for payments".
+- [x] Preview drawer: shows the flag as the dashboard would render it, with assumptions listed above Create and Edit buttons.
 - [ ] Create button posts through the normal Phase 2 API, so audit and validation still apply.
-- [ ] Reject output that references unknown attributes or invalid operators (server-side validation).
+- [x] Reject output that references unknown attributes or invalid operators (server-side validation).
+
+Progress (2026-10-20): preview-only flow implemented, including `/api/ai/flag-creation` and a credential-free fixture demo at `/demo/flag-creation`. Create stays disabled until generated environment targeting is integrated with the normal audited API. Gemini uses a replaceable Phase 5 adapter pending the shared Phase 4 runner. Ten deterministic fixtures and safety/API tests are not evidence of live-model accuracy; the 8-of-10 live acceptance check remains open. Details and checks: `docs/phase5.md`.
 
 ### Acceptance criteria
 
@@ -483,6 +488,18 @@ Depends on: Phase 1 GitHub identity and Phase 4. Ships with a fixture repository
 
 Open the Stale flags page, preview the diff for one flag, click Generate, show the real PR on GitHub.
 
+### Implementation progress (2026-10-20)
+
+Phase 7 has started with the fixture-first slice; the live integration tasks above are not yet complete. Details and next steps: `docs/phase7.md`.
+
+- [x] Pure JS/TS reference scanner with line numbers and surrounding context, exercised against a fixture repository.
+- [x] Conservative stale detection with configurable 30-day ON / 60-day OFF thresholds and full environment coverage checks.
+- [x] Schema-validated cleanup review, trusted-source diffs, confidence and per-file changed-line safety gates.
+- [x] Repository and stale-flag fixture screens, search, thresholds, loading/error/empty states, and explicit diff preview.
+- [x] Public standalone fixture demo at `/demo/cleanup`, including a low-confidence manual-review case; offline tests in `npm run test:cleanup`.
+- [ ] Live GitHub installation, API scanning and persisted references; Gemini-generated edits through Phase 4.
+- [ ] Reviewed/idempotent PR creation, verified merge webhook and audited archive, and the three-real-PR acceptance demo.
+
 ---
 
 ## 13. Phase 8: AI 4, Plain-English audit summaries
@@ -493,12 +510,14 @@ Depends on: Phase 4 and AuditEvent data. Works on seeded audit events.
 
 ### Tasks
 
-- [ ] Per-event summary: "Priya raised checkout_v2 in Production from 10% to 50%." Generated by the fast model with before and after JSON.
+- [x] Per-event summary: "Priya raised checkout_v2 in Production from 10% to 50%." Generated by the fast model with before and after JSON.
 - [ ] Batch and cache summaries on write, stored with the event so the page never waits on the model.
-- [ ] Digest: "What changed" for the last 24 hours or 7 days, grouped by project and environment, highlighting risky changes first.
-- [ ] Audit log page: filter by flag, actor, environment, and date range. Each row shows the summary with a "View raw diff" expander.
-- [ ] Digest card at the top of the Audit page and as a dashboard widget.
-- [ ] Export digest as Markdown.
+- [x] Digest: "What changed" for the last 24 hours or 7 days, grouped by project and environment, highlighting risky changes first.
+- [x] Audit log page: filter by flag, actor, environment, and date range. Each row shows the summary with a "View raw diff" expander.
+- [x] Digest card at the top of the Audit page and as a dashboard widget.
+- [x] Export digest as Markdown.
+
+Progress (2026-10-20): authenticated `/audit`, a dashboard widget, and a credential-free `/demo/audit` are implemented. The Phase 4 fast-model runner selects only sentences supported by validated before/after facts; digests are composed from source-linked summaries. Batches of up to 20 are persisted with provenance. Flag creation schedules best-effort after-response enrichment; automatic batching across every audit writer and durable retry are still open. Immediate fallback read-back measured 83 ms in a disposable PostgreSQL test, not a live-model/deployment latency guarantee. Migration and verification details: `docs/phase8.md`.
 
 ### Acceptance criteria
 

@@ -237,6 +237,10 @@ model AuditEvent {
   before        Json?        @db.JsonB
   after         Json?        @db.JsonB
   summary       String
+  summarySource String       @default("fallback")
+  summaryModel  String?
+  summaryVersion String?
+  summarizedAt  DateTime?
   createdAt     DateTime     @default(now())
 
   project       Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -326,6 +330,8 @@ model Experiment {
 model AiRun {
   id          String      @id @default(cuid())
   workspaceId String
+  // Nullable for historical/seeded runs. New platform calls always record the authenticated user.
+  userId      String?
   feature     String
   input       Json        @db.JsonB
   output      Json?       @db.JsonB
@@ -340,6 +346,8 @@ model AiRun {
   workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId, feature, createdAt])
+  @@index([workspaceId, createdAt])
+  @@index([userId, createdAt])
 }
 
 model ChatThread {
