@@ -19,14 +19,30 @@ export function MobileNavSheet() {
 
   return (
     <>
-      <Button className="xl:hidden" variant="ghost" size="icon" aria-label="Open navigation" onClick={() => setOpen(true)}>
+      <Button
+        className="xl:hidden"
+        variant="ghost"
+        size="icon"
+        aria-label="Open navigation"
+        onClick={() => setOpen(true)}
+      >
         <Menu size={19} aria-hidden="true" />
       </Button>
       {open ? (
-        <div className="fixed inset-0 z-50 bg-background p-4" role="dialog" aria-modal="true" aria-label="Navigation">
+        <div
+          className="fixed inset-0 z-50 bg-background p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation"
+        >
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">FlagForge</span>
-            <Button variant="ghost" size="icon" aria-label="Close navigation" onClick={() => setOpen(false)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Close navigation"
+              onClick={() => setOpen(false)}
+            >
               <X size={19} aria-hidden="true" />
             </Button>
           </div>

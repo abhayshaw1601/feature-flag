@@ -2,3 +2,13 @@ node_modules
 .next
 out
 prisma/migrations
+plan.md
+skills-lock.json
+.agents
+node_modules.partial*
+packages/contracts/dist
+*.tsbuildinfo
+.env.example
+.gitignore
+.prettierignore
+prisma/schema.prisma

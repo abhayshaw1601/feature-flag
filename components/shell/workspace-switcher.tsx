@@ -4,7 +4,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export function WorkspaceSwitcher() {
+export function WorkspaceSwitcher({ workspaceName }: Readonly<{ workspaceName: string }>) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -19,12 +19,15 @@ export function WorkspaceSwitcher() {
       >
         <span className="min-w-0">
           <span className="block truncate text-xs text-muted">Workspace</span>
-          <span className="block truncate text-sm">Northstar Labs</span>
+          <span className="block truncate text-sm">{workspaceName}</span>
         </span>
         <ChevronsUpDown size={15} aria-hidden="true" />
       </Button>
       {open ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-30 rounded-card border border-border bg-surface p-1 shadow-popover" role="menu">
+        <div
+          className="absolute left-0 right-0 top-[calc(100%+8px)] z-30 rounded-card border border-border bg-surface p-1 shadow-popover"
+          role="menu"
+        >
           <button
             className="flex min-h-9 w-full items-center justify-between rounded-control px-2 text-left text-sm hover:bg-background"
             type="button"

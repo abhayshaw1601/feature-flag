@@ -39,21 +39,12 @@ export const aiFeatureSchema = z.enum([
 ]);
 export type AiFeature = z.infer<typeof aiFeatureSchema>;
 
-export const jsonScalarSchema = z.union([
-  z.string(),
-  z.number().finite(),
-  z.boolean(),
-  z.null(),
-]);
+export const jsonScalarSchema = z.union([z.string(), z.number().finite(), z.boolean(), z.null()]);
 export type JsonScalar = z.infer<typeof jsonScalarSchema>;
 
 export type JsonValue = JsonScalar | JsonValue[] | { [key: string]: JsonValue };
 export const jsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
-  z.union([
-    jsonScalarSchema,
-    z.array(jsonValueSchema),
-    z.record(z.string(), jsonValueSchema),
-  ]),
+  z.union([jsonScalarSchema, z.array(jsonValueSchema), z.record(z.string(), jsonValueSchema)]),
 );
 
 export const conditionSchema = z.object({
@@ -140,7 +131,10 @@ export const listFlagsQuerySchema = z.object({
   search: z.string().trim().max(100).optional(),
   type: flagTypeSchema.optional(),
   status: z.enum(["active", "archived", "all"]).default("active"),
-  environment: z.string().regex(/^[a-z0-9-]+$/).optional(),
+  environment: z
+    .string()
+    .regex(/^[a-z0-9-]+$/)
+    .optional(),
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().positive().max(100).default(25),
   sort: z.enum(["updatedAt", "name", "key"]).default("updatedAt"),
@@ -154,7 +148,10 @@ export const listFlagsResponseSchema = z.object({
 export type ListFlagsResponse = z.infer<typeof listFlagsResponseSchema>;
 
 export const createFlagRequestSchema = z.object({
-  key: z.string().regex(/^[a-z][a-z0-9_]*$/).max(80),
+  key: z
+    .string()
+    .regex(/^[a-z][a-z0-9_]*$/)
+    .max(80),
   name: z.string().trim().min(1).max(120),
   type: flagTypeSchema,
   description: z.string().trim().max(500).optional(),
@@ -163,13 +160,15 @@ export const createFlagRequestSchema = z.object({
 });
 export type CreateFlagRequest = z.infer<typeof createFlagRequestSchema>;
 
-export const updateFlagEnvironmentRequestSchema = z.object({
-  enabled: z.boolean().optional(),
-  rules: ruleSetSchema.optional(),
-  rolloutPercent: z.number().int().min(0).max(100).optional(),
-  offValue: jsonValueSchema.optional(),
-  onValue: jsonValueSchema.optional(),
-}).refine((value) => Object.keys(value).length > 0, "At least one environment value is required");
+export const updateFlagEnvironmentRequestSchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    rules: ruleSetSchema.optional(),
+    rolloutPercent: z.number().int().min(0).max(100).optional(),
+    offValue: jsonValueSchema.optional(),
+    onValue: jsonValueSchema.optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, "At least one environment value is required");
 export type UpdateFlagEnvironmentRequest = z.infer<typeof updateFlagEnvironmentRequestSchema>;
 
 export const auditEventSchema = z.object({
@@ -272,11 +271,13 @@ export const flagCreationOutputSchema = z.object({
   name: z.string(),
   type: flagTypeSchema,
   description: z.string(),
-  environments: z.array(z.object({
-    environmentKey: z.string(),
-    enabled: z.boolean(),
-    rules: ruleSetSchema,
-  })),
+  environments: z.array(
+    z.object({
+      environmentKey: z.string(),
+      enabled: z.boolean(),
+      rules: ruleSetSchema,
+    }),
+  ),
   assumptions: z.array(z.string()),
   warnings: z.array(z.string()),
 });
@@ -285,24 +286,28 @@ export type FlagCreationOutput = z.infer<typeof flagCreationOutputSchema>;
 export const rolloutRiskOutputSchema = z.object({
   riskLevel: z.enum(["LOW", "MEDIUM", "HIGH"]),
   reasons: z.array(z.string()),
-  saferPlan: z.array(z.object({
-    step: z.number().int().positive(),
-    rolloutPercent: z.number().int().min(0).max(100),
-    hold: z.string(),
-    watch: z.string(),
-  })),
+  saferPlan: z.array(
+    z.object({
+      step: z.number().int().positive(),
+      rolloutPercent: z.number().int().min(0).max(100),
+      hold: z.string(),
+      watch: z.string(),
+    }),
+  ),
   missingSafeguards: z.array(z.string()),
 });
 export type RolloutRiskOutput = z.infer<typeof rolloutRiskOutputSchema>;
 
 export const staleCleanupOutputSchema = z.object({
   flagKey: z.string(),
-  files: z.array(z.object({
-    filePath: z.string(),
-    originalContent: z.string(),
-    editedContent: z.string(),
-    explanation: z.string(),
-  })),
+  files: z.array(
+    z.object({
+      filePath: z.string(),
+      originalContent: z.string(),
+      editedContent: z.string(),
+      explanation: z.string(),
+    }),
+  ),
   explanation: z.string(),
   confidence: z.number().min(0).max(1),
 });
@@ -317,12 +322,14 @@ export type AuditSummaryOutput = z.infer<typeof auditSummaryOutputSchema>;
 export const auditDigestOutputSchema = z.object({
   periodStart: z.string().datetime(),
   periodEnd: z.string().datetime(),
-  groups: z.array(z.object({
-    projectId: z.string(),
-    environmentId: z.string(),
-    eventIds: z.array(z.string()),
-    summary: z.string(),
-  })),
+  groups: z.array(
+    z.object({
+      projectId: z.string(),
+      environmentId: z.string(),
+      eventIds: z.array(z.string()),
+      summary: z.string(),
+    }),
+  ),
   riskyEventIds: z.array(z.string()),
   markdown: z.string(),
 });
@@ -344,10 +351,12 @@ export const impactAnalysisOutputSchema = z.object({
   contractsTouched: z.array(z.string()),
   testCoverageNotes: z.array(z.string()),
   blastRadius: z.enum(["SMALL", "MEDIUM", "LARGE"]),
-  references: z.array(z.object({
-    referenceId: z.string(),
-    explanation: z.string(),
-  })),
+  references: z.array(
+    z.object({
+      referenceId: z.string(),
+      explanation: z.string(),
+    }),
+  ),
 });
 export type ImpactAnalysisOutput = z.infer<typeof impactAnalysisOutputSchema>;
 
@@ -360,16 +369,20 @@ export type ExperimentAnalysisOutput = z.infer<typeof experimentAnalysisOutputSc
 
 export const chatOutputSchema = z.object({
   answer: z.string(),
-  links: z.array(z.object({
-    type: z.enum(["flag", "audit", "repository"]),
-    id: z.string(),
-    label: z.string(),
-  })),
-  toolCalls: z.array(z.object({
-    tool: z.string(),
-    input: jsonValueSchema,
-    resultSummary: z.string().optional(),
-  })),
+  links: z.array(
+    z.object({
+      type: z.enum(["flag", "audit", "repository"]),
+      id: z.string(),
+      label: z.string(),
+    }),
+  ),
+  toolCalls: z.array(
+    z.object({
+      tool: z.string(),
+      input: jsonValueSchema,
+      resultSummary: z.string().optional(),
+    }),
+  ),
 });
 export type ChatOutput = z.infer<typeof chatOutputSchema>;
 

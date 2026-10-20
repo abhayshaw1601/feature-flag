@@ -12,3 +12,4 @@ node_modules.partial*/
 packages/contracts/dist/
 .agents/**
 package-lock.partial.json
+*.tsbuildinfo

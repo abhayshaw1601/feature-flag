@@ -30,7 +30,9 @@ export function CommandPalette() {
   const results = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return demoFlags.slice(0, 6);
-    return demoFlags.filter((flag) => `${flag.name} ${flag.key}`.toLowerCase().includes(normalized)).slice(0, 8);
+    return demoFlags
+      .filter((flag) => `${flag.name} ${flag.key}`.toLowerCase().includes(normalized))
+      .slice(0, 8);
   }, [query]);
 
   return (
@@ -46,7 +48,9 @@ export function CommandPalette() {
           <Search size={15} aria-hidden="true" />
           <span>Search flags</span>
         </span>
-        <kbd className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted">⌘K</kbd>
+        <kbd className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted">
+          ⌘K
+        </kbd>
       </Button>
       <Button
         className="sm:hidden"
@@ -59,12 +63,27 @@ export function CommandPalette() {
       </Button>
 
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-950/30 px-4 pt-[12vh]" role="presentation">
-          <button className="absolute inset-0 cursor-default" type="button" aria-label="Close search" onClick={() => setOpen(false)} />
-          <div className="relative w-full max-w-lg overflow-hidden rounded-card border border-border bg-surface shadow-popover" role="dialog" aria-modal="true" aria-label="Search flags">
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center bg-slate-950/30 px-4 pt-[12vh]"
+          role="presentation"
+        >
+          <button
+            className="absolute inset-0 cursor-default"
+            type="button"
+            aria-label="Close search"
+            onClick={() => setOpen(false)}
+          />
+          <div
+            className="relative w-full max-w-lg overflow-hidden rounded-card border border-border bg-surface shadow-popover"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Search flags"
+          >
             <div className="flex items-center gap-2 border-b border-border px-4">
               <Search size={17} className="text-muted" aria-hidden="true" />
-              <label className="sr-only" htmlFor="flag-search">Search flags by name or key</label>
+              <label className="sr-only" htmlFor="flag-search">
+                Search flags by name or key
+              </label>
               <input
                 ref={inputRef}
                 className="h-12 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted"
@@ -80,11 +99,20 @@ export function CommandPalette() {
                   if (event.key === "Enter" && results[0]) setOpen(false);
                 }}
               />
-              <Button variant="ghost" size="icon" aria-label="Close search" onClick={() => setOpen(false)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Close search"
+                onClick={() => setOpen(false)}
+              >
                 <X size={17} aria-hidden="true" />
               </Button>
             </div>
-            <div className="max-h-[360px] overflow-y-auto p-2" role="listbox" aria-label="Flag results">
+            <div
+              className="max-h-[360px] overflow-y-auto p-2"
+              role="listbox"
+              aria-label="Flag results"
+            >
               {results.length ? (
                 results.map((flag) => (
                   <button
@@ -95,13 +123,17 @@ export function CommandPalette() {
                   >
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-medium">{flag.name}</span>
-                      <span className="block truncate font-mono text-xs text-muted">{flag.key}</span>
+                      <span className="block truncate font-mono text-xs text-muted">
+                        {flag.key}
+                      </span>
                     </span>
                     <Command size={15} className="shrink-0 text-muted" aria-hidden="true" />
                   </button>
                 ))
               ) : (
-                <p className="px-3 py-8 text-center text-sm text-muted">No flags match “{query}”.</p>
+                <p className="px-3 py-8 text-center text-sm text-muted">
+                  No flags match “{query}”.
+                </p>
               )}
             </div>
             <div className="flex items-center gap-2 border-t border-border px-4 py-2 text-xs text-muted">

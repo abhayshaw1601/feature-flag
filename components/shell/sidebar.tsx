@@ -1,12 +1,5 @@
 import Link from "next/link";
-import {
-  FlaskConical,
-  Flag,
-  GitBranch,
-  Settings,
-  Sparkles,
-  ScrollText,
-} from "lucide-react";
+import { FlaskConical, Flag, GitBranch, Settings, Sparkles, ScrollText } from "lucide-react";
 import { WorkspaceSwitcher } from "@/components/shell/workspace-switcher";
 
 const navGroups = [
@@ -26,24 +19,32 @@ const navGroups = [
   },
   {
     label: "Connect",
-    items: [
-      { label: "Repositories", href: "/repositories", icon: GitBranch },
-    ],
+    items: [{ label: "Repositories", href: "/repositories", icon: GitBranch }],
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({
+  context,
+}: Readonly<{
+  context: { workspace: { name: string }; user: { name: string; role: string } };
+}>) {
   return (
-    <aside className="hidden w-[240px] shrink-0 flex-col border-r border-border px-4 py-5 xl:flex" aria-label="Primary">
+    <aside
+      className="hidden w-[240px] shrink-0 flex-col border-r border-border px-4 py-5 xl:flex"
+      aria-label="Primary"
+    >
       <div className="flex items-center gap-2 px-2">
-        <span className="grid h-8 w-8 place-items-center rounded-control bg-accent text-white" aria-hidden="true">
+        <span
+          className="grid h-8 w-8 place-items-center rounded-control bg-accent text-white"
+          aria-hidden="true"
+        >
           <Flag size={17} strokeWidth={1.8} />
         </span>
         <span className="text-[15px] font-medium tracking-[-0.01em]">FlagForge</span>
       </div>
 
       <div className="mt-8">
-        <WorkspaceSwitcher />
+        <WorkspaceSwitcher workspaceName={context.workspace.name} />
       </div>
 
       <nav className="mt-8 flex-1 space-y-7">
@@ -83,12 +84,15 @@ export function Sidebar() {
           <span>Settings</span>
         </Link>
         <div className="mt-4 flex items-center gap-3 px-2 py-2">
-          <span className="grid h-8 w-8 place-items-center rounded-full border border-border text-xs font-medium" aria-hidden="true">
+          <span
+            className="grid h-8 w-8 place-items-center rounded-full border border-border text-xs font-medium"
+            aria-hidden="true"
+          >
             PS
           </span>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium">Priya Shah</p>
-            <p className="truncate text-xs text-muted">Owner</p>
+            <p className="truncate text-sm font-medium">{context.user.name}</p>
+            <p className="truncate text-xs text-muted">{context.user.role}</p>
           </div>
         </div>
       </div>

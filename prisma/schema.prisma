@@ -61,11 +61,13 @@ enum AuditAction {
 
 model User {
   id          String   @id @default(cuid())
-  githubId    String   @unique
-  name        String
+  githubId    String?  @unique
+  githubUsername String? @unique
+  name        String?
   email       String?  @unique
-  avatarUrl   String?
+  image       String?
   emailVerified DateTime?
+  workspaceProvisionedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -75,6 +77,7 @@ model User {
   ownedFlags  Flag[]       @relation("FlagOwner")
   auditEvents AuditEvent[] @relation("AuditActor")
   chatThreads ChatThread[]
+  sentInvitations WorkspaceInvitation[] @relation("InvitationSender")
 }
 
 model Workspace {
@@ -89,6 +92,26 @@ model Workspace {
   repositories   Repository[]
   aiRuns         AiRun[]
   chatThreads    ChatThread[]
+  invitations    WorkspaceInvitation[]
+}
+
+
+model WorkspaceInvitation {
+  id             String     @id @default(cuid())
+  workspaceId    String
+  githubUsername String
+  role           MemberRole @default(VIEWER)
+  invitedById    String
+  acceptedAt    DateTime?
+  revokedAt     DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy      User      @relation("InvitationSender", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, githubUsername])
+  @@index([githubUsername, acceptedAt, revokedAt])
 }
 
 model Member {

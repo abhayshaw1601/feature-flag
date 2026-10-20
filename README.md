@@ -1,0 +1,90 @@
+# FlagForge
+
+FlagForge is a hosted feature-flag control plane for release teams. Phase 0 provides a Next.js shell, a PostgreSQL/Prisma foundation, deterministic seeded data, and shared Zod contracts. Phase 1 adds GitHub authentication, workspace membership, and SDK key management.
+
+## Requirements
+
+- Node.js 22.23.3 (pinned in `.nvmrc`)
+- npm 10+
+- PostgreSQL 14+
+- Git and a GitHub OAuth application for Phase 1
+
+Docker is optional. The included `Dockerfile` builds the Next.js application for a production container, but a PostgreSQL service is still required for database-backed runs.
+
+## Local setup
+
+```bash
+cp .env.example .env
+npm ci
+npm run db:generate
+npm run db:migrate:deploy
+npm run db:seed
+npm run dev
+```
+
+Open <http://localhost:3000>.
+
+The default `.env.example` uses a local PostgreSQL database named `flagforge` with user `flagforge` and password `flagforge`. Change `DATABASE_URL` and `DIRECT_URL` when using another database. `DIRECT_URL` may be the same connection string for local PostgreSQL.
+
+The seeded workspace is `Northstar Labs`. It contains two projects, six environments, 25 flags, 200 audit events, SDK-key fixtures, repository references, and seven days of exposure and metric events.
+
+## Checks
+
+The single offline-friendly project check is:
+
+```bash
+npm test
+```
+
+It runs contract smoke checks, contracts compilation, Prisma schema validation, TypeScript, ESLint, and Prettier. Prisma validation only needs the two URL variables to exist; it does not connect to PostgreSQL.
+
+After a real seed against PostgreSQL, verify the required counts with:
+
+```bash
+npm run db:verify
+```
+
+For a production build:
+
+```bash
+npm run build
+npm start
+```
+
+## Phase 1 GitHub OAuth setup
+
+Create a GitHub OAuth App with these callback URLs:
+
+- `http://localhost:3000/api/auth/callback/github`
+- `https://<your-deployed-host>/api/auth/callback/github`
+
+Set `AUTH_SECRET`, `AUTH_GITHUB_ID`, and `AUTH_GITHUB_SECRET` in `.env`. The Phase 1 settings and SDK-key APIs also require `DATABASE_URL` and `DIRECT_URL`.
+
+Gemini and GitHub App variables are reserved for later phases. Set `AI_PROVIDER=google`, `GEMINI_API_KEY`, `LLM_MODEL_REASONING=gemini-2.5-pro`, and `LLM_MODEL_FAST=gemini-2.5-flash` when the AI layer is enabled. `AI_MOCK=true` keeps future AI routes deterministic during local development.
+
+## Vercel deployment
+
+The app is configured for a standalone Next.js build and can deploy to Vercel with the Vercel CLI or the connected GitHub repository:
+
+```bash
+npx vercel
+npx vercel --prod
+```
+
+Configure the variables from `.env.example` in the Vercel project, add the production GitHub callback URL, and run `npm run db:migrate:deploy` against the hosted PostgreSQL database before opening the preview. A public Vercel preview URL is not committed because deployment credentials and the target Vercel project are account-specific.
+
+## Project structure
+
+- `app/` — Next.js App Router entry points and auth routes
+- `components/` — shell, flags, settings, and SDK key UI
+- `lib/` — Prisma, authentication, authorization, provisioning, and deterministic fixtures
+- `packages/contracts/` — shared Zod schemas and TypeScript types
+- `prisma/` — schema, migration, seed, and seed verification
+- `tests/` — offline smoke checks
+
+## Security notes
+
+- SDK secrets are generated with cryptographic randomness and stored only as SHA-256 hashes.
+- Raw SDK keys are returned once at creation and are never written to audit events.
+- Role checks are enforced in route handlers, not only in the UI.
+- Never commit `.env` or real credentials.

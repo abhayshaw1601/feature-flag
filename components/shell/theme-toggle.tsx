@@ -28,8 +28,17 @@ export function ThemeToggle() {
   }
 
   return (
-    <Button variant="ghost" size="icon" aria-label={`Switch to ${nextTheme} mode`} onClick={toggleTheme}>
-      {theme === "dark" ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
+    <Button
+      variant="ghost"
+      size="icon"
+      aria-label={`Switch to ${nextTheme} mode`}
+      onClick={toggleTheme}
+    >
+      {theme === "dark" ? (
+        <Sun size={18} aria-hidden="true" />
+      ) : (
+        <Moon size={18} aria-hidden="true" />
+      )}
     </Button>
   );
 }

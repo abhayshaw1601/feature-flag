@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "FlagForge feature flag control plane foundation",
-  "workspaces": ["packages/contracts"],
+  "workspaces": [
+    "packages/contracts"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "npm run contracts:build && prisma generate && next build",
@@ -14,17 +16,20 @@
     "typecheck": "tsc --noEmit",
     "contracts:build": "tsc -p packages/contracts/tsconfig.json",
     "db:generate": "prisma generate",
-    "db:validate": "prisma validate",
+    "db:validate": "node scripts/db-validate.mjs",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:setup": "prisma migrate deploy && prisma db seed",
-    "test": "npm run contracts:build && npm run db:validate && npm run typecheck && npm run lint && npm run format:check"
+    "test": "npm run test:smoke && npm run contracts:build && npm run db:validate && npm run typecheck && npm run lint && npm run format:check",
+    "test:smoke": "tsx tests/phase0-smoke.ts",
+    "db:verify": "tsx prisma/verify-seed.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.7.4",
     "@fontsource/inter": "5.1.1",
     "@fontsource/jetbrains-mono": "5.1.1",
     "@prisma/client": "6.14.0",
@@ -32,6 +37,7 @@
     "clsx": "2.1.1",
     "lucide-react": "0.468.0",
     "next": "15.5.6",
+    "next-auth": "^5.0.0-beta.29",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "tailwind-merge": "3.0.2",
