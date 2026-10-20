@@ -5,6 +5,16 @@ Branch: `main`
 Revision: `15233ee feat: complete foundation and workspace access`
 Remote: `origin/main` is one commit behind. The implementation is committed locally; do not push until GitHub authentication is configured.
 
+## Phase 2 update
+
+The first flag-management increment is implemented: scoped list/create APIs, safe environment
+defaults with an atomic creation audit, and a dashboard create dialog plus detail/history pages.
+See [docs/phase2.md](docs/phase2.md) for the current verification evidence and remaining targeting,
+confirmation, and archive/restore work. The foundation notes below describe the earlier baseline;
+the fixture fallback mentioned there has been removed from authenticated flag loading.
+
+Only commit the intended changes locally. The user handles all pushes.
+
 ## Goal
 
 Build FlagForge, a hosted feature-flag control plane. Phase 0 establishes the Next.js shell, PostgreSQL/Prisma schema, seeded demo data, and shared Zod contracts. Phase 1 adds GitHub sign-in, first-login workspace provisioning, role checks, workspace settings/invitations, and SDK key lifecycle management.

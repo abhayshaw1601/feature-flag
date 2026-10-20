@@ -16,15 +16,28 @@ export default async function HomePage() {
     orderBy: { createdAt: "asc" },
     include: {
       workspace: {
-        include: { projects: { orderBy: { createdAt: "asc" }, take: 1 } },
+        include: {
+          projects: {
+            orderBy: { createdAt: "asc" },
+            take: 1,
+            include: {
+              environments: {
+                select: { key: true, name: true },
+                orderBy: { createdAt: "asc" },
+              },
+            },
+          },
+          members: { select: { user: { select: { id: true, name: true } } } },
+        },
       },
       user: { select: { name: true } },
     },
   });
   if (!membership) redirect("/sign-in?error=workspace");
 
-  const { flags, source } = await loadFlags();
-  const project = membership.workspace.projects[0] ?? { name: "Default project", key: "default" };
+  const project = membership.workspace.projects[0];
+  if (!project) redirect("/settings");
+  const initialData = await loadFlags(project.id);
 
   return (
     <AppShell
@@ -34,7 +47,16 @@ export default async function HomePage() {
         user: { name: membership.user.name ?? "GitHub user", role: membership.role },
       }}
     >
-      <FlagsPage initialFlags={flags} dataSource={source} />
+      <FlagsPage
+        initialData={initialData}
+        project={{ id: project.id, name: project.name }}
+        members={membership.workspace.members.map(({ user }) => ({
+          id: user.id,
+          name: user.name ?? "Unnamed user",
+        }))}
+        environments={project.environments}
+        canCreate={membership.role !== "VIEWER"}
+      />
     </AppShell>
   );
 }

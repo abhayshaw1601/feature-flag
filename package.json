@@ -4,11 +4,14 @@
   "private": true,
   "description": "FlagForge feature flag control plane foundation",
   "workspaces": [
-    "packages/contracts"
+    "packages/contracts",
+    "packages/evaluator",
+    "packages/sdk",
+    "examples/next-app"
   ],
   "scripts": {
     "dev": "next dev",
-    "build": "npm run contracts:build && prisma generate && next build",
+    "build": "npm run contracts:build && npm run sdk:build && prisma generate && next build",
     "start": "next start",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -21,10 +24,19 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:setup": "prisma migrate deploy && prisma db seed",
-    "test": "npm run test:smoke && npm run test:rollout-risk && npm run contracts:build && npm run db:validate && npm run typecheck && npm run lint && npm run format:check",
-    "test:smoke": "tsx tests/phase0-smoke.ts",
+    "test": "npm run test:smoke && npm run test:phase2 && npm run test:phase3 && npm run test:ai && npm run test:rollout-risk && npm run test:flag-creation && npm run contracts:build && npm run db:validate && npm run typecheck && npm run lint && npm run format:check",
+    "test:ai": "tsx --tsconfig components/ai/tsconfig.check.json --test tests/ai-platform.test.ts tests/ai-tools.test.ts app/ai/ai-test-client.test.ts components/ai/ai-components.test.tsx",
+    "test:ai:db": "tsx --test tests/ai-store.integration.test.ts",
+    "test:phase2": "tsx --test tests/phase2-backend.ts tests/phase2-ui.ts",
+    "test:smoke": "tsx tests/phase0-smoke.ts && npm run test:cleanup",
+    "test:cleanup": "tsx --test tests/cleanup-scan.test.ts tests/cleanup-safety.test.ts tests/cleanup-fixture.test.ts",
     "test:rollout-risk": "tsx --test tests/rollout-risk*.ts",
-    "db:verify": "tsx prisma/verify-seed.ts"
+    "test:flag-creation": "tsx --tsconfig tests/tsconfig.flag-creation.json --test tests/flag-creation.test.ts tests/flag-creation-api.test.ts tests/flag-creation-ui.test.ts",
+    "db:verify": "tsx prisma/verify-seed.ts",
+    "test:phase3": "npm run sdk:build && tsx --test tests/evaluator.test.ts tests/sdk.test.ts tests/sdk-delivery.test.ts tests/example-smoke.test.ts",
+    "sdk:build": "tsc -p packages/evaluator/tsconfig.json && node packages/sdk/build.mjs",
+    "sdk:benchmark": "tsx scripts/benchmark-evaluator.ts",
+    "example:dev": "npm run sdk:build && npm run dev --workspace @flagforge/example"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -42,7 +54,8 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "tailwind-merge": "3.0.2",
-    "zod": "3.25.76"
+    "zod": "3.25.76",
+    "zod-to-json-schema": "^3.25.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "3.2.0",
@@ -51,6 +64,7 @@
     "@types/react-dom": "19.0.2",
     "autoprefixer": "10.4.20",
     "eslint": "9.16.0",
+    "esbuild": "0.23.1",
     "eslint-config-next": "15.5.6",
     "postcss": "8.4.49",
     "prettier": "3.4.2",

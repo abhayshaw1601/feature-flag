@@ -1,85 +1,54 @@
-import { flagSummarySchema, type FlagSummary } from "@flagforge/contracts";
-import { demoFlags, demoProjects, demoEnvironments } from "@/lib/seed-data";
+import type { FlagDetail, FlagSummary, ListFlagsResponse } from "@flagforge/contracts";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { createFlagService, type FlagHistory, type FlagProjectAccess } from "@/lib/flag-service";
 
-function serializedFlag(flag: {
-  id: string;
-  projectId: string;
-  key: string;
-  name: string;
-  description: string | null;
-  type: string;
-  tags: string[];
-  owner: { id: string; name: string | null } | null;
-  archivedAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-  environments: Array<{
-    environmentId: string;
-    environment: { key: string };
-    enabled: boolean;
-    rules: unknown;
-    rolloutPercent: number;
-    offValue: unknown;
-    onValue: unknown;
-    version: number;
-    updatedAt: Date;
-  }>;
-}): FlagSummary {
-  return flagSummarySchema.parse({
-    id: flag.id,
-    projectId: flag.projectId,
-    key: flag.key,
-    name: flag.name,
-    description: flag.description,
-    type: flag.type,
-    tags: flag.tags,
-    owner: flag.owner ? { id: flag.owner.id, name: flag.owner.name ?? "Unassigned" } : null,
-    archivedAt: flag.archivedAt?.toISOString() ?? null,
-    createdAt: flag.createdAt.toISOString(),
-    updatedAt: flag.updatedAt.toISOString(),
-    environments: flag.environments.map((environment) => ({
-      environmentId: environment.environmentId,
-      environmentKey: environment.environment.key,
-      enabled: environment.enabled,
-      rules: environment.rules,
-      rolloutPercent: environment.rolloutPercent,
-      offValue: environment.offValue,
-      onValue: environment.onValue,
-      version: environment.version,
-      updatedAt: environment.updatedAt.toISOString(),
-    })),
-  });
+export { FlagServiceError } from "@/lib/flag-errors";
+export type { FlagHistory, FlagProjectAccess } from "@/lib/flag-service";
+
+const service = createFlagService({
+  getSession: auth,
+  // Keep authorization, rows, and pagination counts in the same database snapshot.
+  transaction: (work) => prisma.$transaction(work, { isolationLevel: "RepeatableRead" }),
+});
+
+/**
+ * Server-only, authenticated project list. Returns { items, pagination }; never fixtures.
+ * Query accepts the shared list schema (or URLSearchParams), rejecting unknown fields.
+ * Sort: updatedAt descending, name/key ascending, with id as the stable tie-breaker.
+ * environment selects flags having that project's environment config; all configs are returned.
+ * Throws FlagServiceError for access/domain failures and ZodError for invalid input.
+ * Database failures propagate to the caller.
+ */
+export function loadFlags(projectId: string, query?: unknown): Promise<ListFlagsResponse> {
+  return service.loadFlags(projectId, query);
 }
 
-export async function loadFlags(): Promise<{
-  flags: FlagSummary[];
-  source: "database" | "fixture";
-}> {
-  if (!process.env.DATABASE_URL) return { flags: demoFlags, source: "fixture" };
-
-  try {
-    const records = await prisma.flag.findMany({
-      where: { projectId: demoProjects[0].id },
-      orderBy: { updatedAt: "desc" },
-      include: {
-        owner: { select: { id: true, name: true } },
-        environments: {
-          include: { environment: { select: { key: true } } },
-          orderBy: { environment: { key: "asc" } },
-        },
-      },
-    });
-    if (!records.length) return { flags: demoFlags, source: "fixture" };
-    return { flags: records.map(serializedFlag), source: "database" };
-  } catch (error) {
-    console.warn("Database flags unavailable; using deterministic fixture data.", error);
-    return { flags: demoFlags, source: "fixture" };
-  }
+/** Authenticated, membership-scoped detail including project metadata and all environment configs. */
+export function loadFlagDetail(id: string): Promise<FlagDetail> {
+  return service.loadFlagDetail(id);
 }
 
-export function environmentCountLabel(source: "database" | "fixture") {
-  return source === "database"
-    ? "from the seeded database"
-    : `in the ${demoEnvironments.length}-environment fixture`;
+/** Authenticated flag history, newest first: page 1, pageSize 50, with a total count. */
+export function loadFlagHistory(id: string): Promise<FlagHistory> {
+  return service.loadFlagHistory(id);
+}
+
+/** Authenticated audit query; projectId or flagId is mandatory. Supports shared audit filters. */
+export function loadAudit(query: unknown): Promise<FlagHistory> {
+  return service.loadAudit(query);
+}
+
+/** EDITOR+ only. Validates input and owner, then atomically creates configs and a creation audit. */
+export function createFlag(projectId: string, input: unknown): Promise<FlagSummary> {
+  return service.createFlag(projectId, input);
+}
+
+/**
+ * Authenticated shell context for a project: { project, workspace, role, actor }.
+ * Missing and inaccessible projects both throw 404; no session throws 401.
+ * This is a read access check, not a replacement for authorization on subsequent mutations.
+ */
+export function requireFlagProjectAccess(projectId: string): Promise<FlagProjectAccess> {
+  return service.requireFlagProjectAccess(projectId);
 }
