@@ -76,15 +76,7 @@ Create a GitHub OAuth App with these callback URLs:
 
 Set `AUTH_SECRET`, `AUTH_GITHUB_ID`, and `AUTH_GITHUB_SECRET` in `.env`. The Phase 1 settings and SDK-key APIs also require `DATABASE_URL` and `DIRECT_URL`.
 
-The Phase 4 AI layer uses Gemini only. Set `AI_PROVIDER=google`, `LLM_MODEL_REASONING=gemini-2.5-pro`, and `LLM_MODEL_FAST=gemini-2.5-flash`. `AI_MOCK=true` uses deterministic fixtures without an API key; live mode requires a server-side `GEMINI_API_KEY`. GitHub App variables are reserved for later phases.
-
-## Phase 4 AI platform
-
-Run `npm run db:migrate:deploy` to add AI usage indexes and the run's authenticated user ID, then sign in and open `/ai` (**AI demo** in the sidebar). Generate a response to exercise the schema-validated `/api/ai/test` endpoint and see its run ID, model, token counts, and mock/live label. Nothing changes a flag.
-
-The shared layer includes Gemini structured output and streaming, one retry, versioned prompts, sanitization, workspace-scoped read-only tools, persistent run logging, a rolling 20-call/user/minute limit, and `AI_DAILY_WORKSPACE_CALL_LIMIT` (default 200 calls per UTC day). Limits apply to mock mode too. Existing independently developed feature adapters must adopt `runAi` to inherit these guarantees.
-
-Run `npm run test:ai` for offline regression tests. See [docs/phase4-ai-platform.md](docs/phase4-ai-platform.md) for the API, integration guide, database tests, and remaining live-demo checks.
+Gemini and GitHub App variables are reserved for later phases. Set `AI_PROVIDER=google`, `GEMINI_API_KEY`, `LLM_MODEL_REASONING=gemini-2.5-pro`, and `LLM_MODEL_FAST=gemini-2.5-flash` when the AI layer is enabled. `AI_MOCK=true` keeps future AI routes deterministic during local development.
 
 ## Vercel deployment
 
@@ -118,9 +110,3 @@ Configure the variables from `.env.example` in the Vercel project, add the produ
 Open `/demo/rollout-risk` for a credential-free confirmation flow: review a Production payments change, see its deterministic HIGH risk, type the flag key, and apply only the first safer step to browser state. No production flag is changed. The authenticated assessment API supports Gemini explanations with a deterministic fallback; production-write integration is still pending.
 
 Run `npm run test:rollout-risk` for the offline safety, provider, cache, and scoped-context checks (included in `npm test`). See [docs/phase6-rollout-risk.md](docs/phase6-rollout-risk.md) for the API, configuration, walkthrough, and remaining integration requirements.
-
-## Phase 7 cleanup preview
-
-The first Phase 7 slice is available at `/demo/cleanup` without credentials: scan a synthetic repository, adjust stale-age thresholds, and preview cleanup diffs. `/repositories` and `/stale-flags` show the same explicitly labelled fixtures after sign-in. No live GitHub or Gemini calls, PR creation, or flag archiving occur yet.
-
-Run `npm run test:cleanup` for the offline scanner, stale detection, safety gate and fixture API tests (also included in `npm test`). See [docs/phase7.md](docs/phase7.md) for the walkthrough, safety boundaries and remaining GitHub integration work.
