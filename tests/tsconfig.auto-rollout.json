@@ -1,0 +1,22 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "incremental": false,
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["./*"],
+      "@flagforge/contracts": ["./packages/contracts/src/index.ts"]
+    }
+  },
+  "include": [
+    "../lib/auto-rollout/**/*.ts",
+    "../components/auto-rollout/**/*.ts",
+    "../components/auto-rollout/**/*.tsx",
+    "../components/shell/theme-toggle.tsx",
+    "../components/ui/button.tsx",
+    "../app/demo/auto-rollout/page.tsx",
+    "../scripts/simulate-auto-rollout.ts",
+    "./auto-rollout*.test.ts"
+  ]
+}

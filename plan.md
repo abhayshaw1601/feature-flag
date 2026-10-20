@@ -99,6 +99,7 @@ The interface must look like a finished product, not a hackathon prototype.
 3. Status is shown with text labels plus a small colored dot drawn in CSS, never with symbols or emoji.
 4. AI output is sanitized before display. The system prompt for every AI call says "Do not use emojis", and a server-side filter strips any emoji characters from model output as a backstop.
 5. only use gemini models for ai features.
+6. a server is running on localhost:3000, do not start it again. if it is not running or needed then start it.
 
 ### Design tokens
 
