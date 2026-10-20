@@ -1,0 +1,27 @@
+{
+  "name": "@flagforge/evaluator",
+  "version": "0.1.0",
+  "description": "Dependency-free, deterministic local feature flag evaluation",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsx --test ../../tests/evaluator.test.ts",
+    "benchmark": "tsx ../../scripts/benchmark-evaluator.ts"
+  }
+}

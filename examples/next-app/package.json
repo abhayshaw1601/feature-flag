@@ -1,0 +1,32 @@
+{
+  "name": "@flagforge/example",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p3001",
+    "build": "next build",
+    "start": "next start -p3001",
+    "lint": "eslint app components lib next.config.ts postcss.config.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test ../../tests/example-smoke.test.ts"
+  },
+  "dependencies": {
+    "@flagforge/sdk": "0.1.0",
+    "@fontsource/inter": "5.1.1",
+    "@fontsource/jetbrains-mono": "5.1.1",
+    "lucide-react": "0.468.0",
+    "next": "15.5.6",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "3.2.0",
+    "@types/node": "22.10.2",
+    "@types/react": "19.0.3",
+    "@types/react-dom": "19.0.2",
+    "eslint": "9.16.0",
+    "eslint-config-next": "15.5.6",
+    "tsx": "4.19.2",
+    "typescript": "5.7.2"
+  }
+}

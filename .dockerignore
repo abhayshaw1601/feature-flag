@@ -3,3 +3,11 @@ node_modules
 .git
 .env
 .taste-skill
+**/node_modules
+node_modules.partial*
+**/.next
+.next-*
+**/.env*
+**/*.log
+**/dist
+**/.taste-skill

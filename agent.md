@@ -1,5 +1,42 @@
 # FlagForge agent handoff
 
+## Phase 3 update (2026-10-20)
+
+- Implemented independently of the parallel phases: `packages/evaluator/`,
+  `packages/sdk/`, `lib/sdk-delivery.ts`, `lib/sdk-store.ts`, the three
+  `app/api/sdk/` routes, and `examples/next-app/`.
+- `npm run test:phase3`: **61 passed, 0 failed, 0 skipped**. Covers all operators,
+  100k-user distribution/stickiness, stream reconnect/poll fallback, ETags,
+  resolved-client isolation, hashed telemetry, cancellation, and outage caching.
+- Default one-second SSE cadence measured **954.2 ms** from in-memory store change
+  to real SDK cache. This excludes dashboard, PostgreSQL, and hosted-network time.
+- `npm run sdk:build` and `npm pack --workspace @flagforge/sdk --dry-run --ignore-scripts`
+  passed (ESM/CJS/declarations, no runtime dependencies). Not published to npm.
+- Targeted Phase 3 ESLint passed before the final cadence test; its final repeat
+  timed out at 120 seconds. Phase 3 source formatting passed. Root typecheck passed before concurrent work
+  added an unresolved `@/lib/auto-rollout/simulator` import; latest full-tree
+  typecheck is blocked there. Do not modify other agents' unfinished files.
+- Root `npm test` exceeded 120 seconds at typecheck after its executed test suites
+  passed. Root/example builds exceeded 240/180 seconds. No new complete root build
+  pass, database-backed integration pass, Docker pass, or deployment is claimed.
+- Benchmark median batch averages: **2.145 us** default / **3.933 us** one AND rule /
+  **0.544 us** disabled (Node 22.23.3 Linux x64, 100k warmup then 5 x 100k samples).
+- Use `npm run example:dev`, then http://localhost:3001. Configure its server key
+  with `examples/next-app/.env.example`; never expose a SERVER key to the browser.
+- Details and next live verification: [docs/phase3.md](docs/phase3.md). One-second
+  database polling observes committed flag changes without a Phase 2 write hook.
+  `rules.defaultServe.rolloutPercent` is authoritative; keep the display column
+  synchronized when writing. Snapshot versions are equality-only content revisions.
+- **Local commits only; the user handles pushes.** No npm publish or remote push
+  was attempted for Phase 3. Preserve all other agents' staged/unstaged work.
+
+### Phase 3 next action
+
+After parallel work settles, rerun `npm run test:phase3`, the full `npm test`, and
+`npm run build`. Then test an authenticated dashboard toggle against a migrated
+database and the example, and stop the control plane to verify cache continuity.
+Publishing `@flagforge/sdk` requires authorized npm scope access.
+
 Updated: 2026-10-20
 Branch: `main`
 Revision: `15233ee feat: complete foundation and workspace access`

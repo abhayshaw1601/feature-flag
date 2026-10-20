@@ -1,5 +1,24 @@
 # FlagForge
 
+## Phase 3 SDK and delivery
+
+The zero-runtime-dependency SDK is available locally in `packages/sdk/`, with a
+pure evaluator, authenticated config/ETag delivery, SSE updates, and event batches.
+
+```bash
+npm ci
+npm run test:phase3
+npm run sdk:benchmark
+# Configure examples/next-app/.env.local from its .env.example first.
+npm run example:dev
+```
+
+The example opens at http://localhost:3001 and keeps its SERVER key off the browser.
+See [docs/phase3.md](docs/phase3.md), [SDK usage](packages/sdk/README.md), and
+[the live/outage walkthrough](examples/next-app/README.md). The SDK is packaged but
+not published to npm. Live database/dashboard latency and deployment remain to be
+verified; offline tests are not a production timing guarantee.
+
 FlagForge is a hosted feature-flag control plane for release teams. Phase 0 provides a Next.js shell, a PostgreSQL/Prisma foundation, deterministic seeded data, and shared Zod contracts. Phase 1 adds GitHub authentication, workspace membership, and SDK key management.
 
 ## Requirements

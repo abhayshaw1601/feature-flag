@@ -7,6 +7,10 @@ skills-lock.json
 .agents
 node_modules.partial*
 packages/contracts/dist
+packages/*/dist
+examples/**/.next
+examples/**/node_modules
+.next-*
 *.tsbuildinfo
 .env.example
 .gitignore
