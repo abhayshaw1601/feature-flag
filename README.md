@@ -88,3 +88,9 @@ Configure the variables from `.env.example` in the Vercel project, add the produ
 - Raw SDK keys are returned once at creation and are never written to audit events.
 - Role checks are enforced in route handlers, not only in the UI.
 - Never commit `.env` or real credentials.
+
+## Phase 6 rollout risk check
+
+Open `/demo/rollout-risk` for a credential-free confirmation flow: review a Production payments change, see its deterministic HIGH risk, type the flag key, and apply only the first safer step to browser state. No production flag is changed. The authenticated assessment API supports Gemini explanations with a deterministic fallback; production-write integration is still pending.
+
+Run `npm run test:rollout-risk` for the offline safety, provider, cache, and scoped-context checks (included in `npm test`). See [docs/phase6-rollout-risk.md](docs/phase6-rollout-risk.md) for the API, configuration, walkthrough, and remaining integration requirements.
