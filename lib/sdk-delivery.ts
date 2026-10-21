@@ -7,7 +7,7 @@ import {
   type SdkEventInput,
   type ServerFlagConfig,
 } from "@flagforge/contracts";
-import { evaluateFlag } from "../packages/evaluator/src/index";
+import { evaluateFlag } from "../packages/evaluator/dist/index.js";
 
 export type DeliveryKey = {
   id: string;

@@ -25,13 +25,18 @@ const operatorLabels: Record<RuleOperator, string> = {
   less_than: "is less than",
 };
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
 type PreviewProps = {
   preview: FlagCreationPreview;
+  projectId?: string;
   environments: ReadonlyArray<{ key: string; name: string }>;
   allowProduction: boolean;
   returnFocusRef: RefObject<HTMLElement | null>;
   editTargetRef: RefObject<HTMLTextAreaElement | null>;
   onDismiss: () => void;
+  onSuccess?: () => void;
 };
 
 function Rollout({ percent, audience }: { percent: number; audience: string }) {
@@ -132,17 +137,29 @@ function EnvironmentPreview({
 
 export function FlagCreationPreviewDrawer({
   preview,
+  projectId,
   environments,
   allowProduction,
   returnFocusRef,
   editTargetRef,
   onDismiss,
+  onSuccess,
 }: PreviewProps) {
+  let router: ReturnType<typeof useRouter> | null = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    router = useRouter();
+  } catch {
+    // Fallback when rendered outside of App Router context in offline unit tests
+  }
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const closeIntent = useRef<"dismiss" | "edit">("dismiss");
   const id = useId();
   const { draft } = preview;
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
   const omitted = environments.filter(
     (environment) => !draft.environments.some((item) => item.environmentKey === environment.key),
   );
@@ -163,6 +180,43 @@ export function FlagCreationPreviewDrawer({
   function close(intent: "dismiss" | "edit") {
     closeIntent.current = intent;
     onDismiss();
+  }
+
+  async function handleCreate() {
+    if (!projectId) {
+      setCreateError("No active project found to create this flag.");
+      return;
+    }
+    setCreating(true);
+    setCreateError(null);
+    try {
+      const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/flags`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          key: draft.key,
+          name: draft.name,
+          type: draft.type,
+          description: draft.description,
+          environments: draft.environments.map((env) => ({
+            environmentKey: env.environmentKey,
+            enabled: env.enabled,
+            rules: env.rules,
+          })),
+        }),
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(body?.error?.message ?? "Failed to create flag.");
+      }
+      onSuccess?.();
+      onDismiss();
+      router?.refresh();
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : "An unexpected error occurred.");
+    } finally {
+      setCreating(false);
+    }
   }
 
   return (
@@ -321,24 +375,25 @@ export function FlagCreationPreviewDrawer({
       </div>
 
       <footer className="space-y-4 border-t border-border p-4 sm:p-6">
-        <p id={`${id}-create-unavailable`} className="text-sm text-muted">
-          Create is unavailable: Phase 2 API integration is pending for generated drafts. This
-          preview cannot save a flag or change any environment.
-        </p>
+        {createError ? (
+          <p role="alert" className="text-sm text-danger">
+            {createError}
+          </p>
+        ) : null}
         <div className="flex flex-wrap justify-end gap-2">
-          <Button className="min-h-11" onClick={() => close("dismiss")}>
+          <Button className="min-h-11" disabled={creating} onClick={() => close("dismiss")}>
             Dismiss
           </Button>
-          <Button className="min-h-11" onClick={() => close("edit")}>
+          <Button className="min-h-11" disabled={creating} onClick={() => close("edit")}>
             <Pencil size={16} aria-hidden="true" /> Edit request
           </Button>
           <Button
             variant="primary"
             className="min-h-11"
-            disabled
-            aria-describedby={`${id}-create-unavailable`}
+            disabled={creating}
+            onClick={() => void handleCreate()}
           >
-            Create
+            {creating ? "Creating…" : "Create"}
           </Button>
         </div>
       </footer>

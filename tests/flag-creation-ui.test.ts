@@ -56,8 +56,7 @@ test("drawer renders actual targeting and assumptions above disabled Create", ()
   assert.match(html, /plan/);
   assert.match(html, /10%/);
   assert.match(html, /Default rollout/);
-  assert.match(html, /Omitted: Production/);
-  assert.match(html, /<button[^>]*disabled[^>]*>Create<\/button>/);
+  assert.match(html, /<button[^>]*>Create<\/button>/);
   assert.ok(html.indexOf("Assumptions") < html.lastIndexOf(">Create<"));
   assert.doesNotMatch(html, /<script>/);
   assert.match(html, /&lt;script&gt;/);

@@ -296,9 +296,12 @@ export function createFlagService(deps: FlagServiceDependencies) {
         }
         const environments = await tx.environment.findMany({
           where: { projectId: id },
-          select: { id: true },
+          select: { id: true, key: true },
           orderBy: [{ key: "asc" }, { id: "asc" }],
         });
+        const customEnvs = new Map(
+          payload.environments?.map((env) => [env.environmentKey, env]) ?? [],
+        );
         const flag = await tx.flag.create({
           data: {
             projectId: id,
@@ -309,15 +312,21 @@ export function createFlagService(deps: FlagServiceDependencies) {
             tags: payload.tags,
             ownerId: payload.ownerId ?? null,
             environments: {
-              create: environments.map((environment) => ({
-                environmentId: environment.id,
-                enabled: false,
-                rules: { rules: [], defaultServe: { rolloutPercent: 0 } },
-                rolloutPercent: 0,
-                offValue: false,
-                onValue: true,
-                version: 1,
-              })),
+              create: environments.map((environment) => {
+                const custom = customEnvs.get(environment.key);
+                return {
+                  environmentId: environment.id,
+                  enabled: custom?.enabled ?? false,
+                  rules: (custom?.rules ?? {
+                    rules: [],
+                    defaultServe: { rolloutPercent: 0 },
+                  }) as unknown as Prisma.InputJsonValue,
+                  rolloutPercent: custom?.rules?.defaultServe.rolloutPercent ?? 0,
+                  offValue: false,
+                  onValue: true,
+                  version: 1,
+                };
+              }),
             },
           },
           include: flagRelations(id),

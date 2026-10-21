@@ -403,7 +403,7 @@ Output (validated):
 - [x] Prompt rule: if the request is ambiguous, put the interpretation in `assumptions` instead of guessing silently.
 - [x] UI: a command bar at the top of the Flags page ("Describe a flag in plain English") with example chips such as "Kill switch for payments".
 - [x] Preview drawer: shows the flag as the dashboard would render it, with assumptions listed above Create and Edit buttons.
-- [ ] Create button posts through the normal Phase 2 API, so audit and validation still apply.
+- [x] Create button posts through the normal Phase 2 API, so audit and validation still apply.
 - [x] Reject output that references unknown attributes or invalid operators (server-side validation).
 
 Progress (2026-10-20): preview-only flow implemented, including `/api/ai/flag-creation` and a credential-free fixture demo at `/demo/flag-creation`. Create stays disabled until generated environment targeting is integrated with the normal audited API. Gemini uses a replaceable Phase 5 adapter pending the shared Phase 4 runner. Ten deterministic fixtures and safety/API tests are not evidence of live-model accuracy; the 8-of-10 live acceptance check remains open. Details and checks: `docs/phase5.md`.

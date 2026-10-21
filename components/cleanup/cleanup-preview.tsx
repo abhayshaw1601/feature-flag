@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GitPullRequest, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CleanupPreview } from "@/lib/cleanup/fixture";
@@ -16,10 +16,39 @@ export function CleanupPreviewPanel({
   const heading = useRef<HTMLHeadingElement>(null);
   const { review } = preview;
   const manual = review.status === "NEEDS_MANUAL_REVIEW";
+  const [prOpening, setPrOpening] = useState(false);
+  const [prError, setPrError] = useState<string | null>(null);
+  const [prSuccess, setPrSuccess] = useState<{
+    prNumber: number;
+    prTitle: string;
+    prUrl: string;
+  } | null>(null);
+
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
     heading.current?.scrollIntoView({ block: "start" });
   }, [preview]);
+
+  async function handleOpenPr() {
+    setPrOpening(true);
+    setPrError(null);
+    try {
+      const response = await fetch("/api/cleanup/open-pr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ flagKey: review.flagKey }),
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(body?.error?.message ?? "Failed to open cleanup pull request.");
+      }
+      setPrSuccess(body.data);
+    } catch (err) {
+      setPrError(err instanceof Error ? err.message : "Failed to open cleanup pull request.");
+    } finally {
+      setPrOpening(false);
+    }
+  }
 
   return (
     <section
@@ -116,20 +145,44 @@ export function CleanupPreviewPanel({
         <p className="text-sm">
           Proposed branch: <code className="break-all font-mono text-xs">{preview.branchName}</code>
         </p>
-        <p id="cleanup-pr-disabled" className="mt-2 text-sm text-muted">
-          {manual
-            ? "This proposal fails the safety gate. "
-            : "Review the code and run the repository tests before approving. "}
-          GitHub PR creation is not wired in this fixture demo. No branch, commit, PR, or archive is
-          created.
-        </p>
+        {prSuccess ? (
+          <div className="mt-3 rounded-control border border-success bg-success/10 p-3 text-sm text-success">
+            Pull request opened successfully:{" "}
+            <a
+              href={prSuccess.prUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium underline hover:text-success/80"
+            >
+              #{prSuccess.prNumber} {prSuccess.prTitle}
+            </a>
+          </div>
+        ) : (
+          <p id="cleanup-pr-info" className="mt-2 text-sm text-muted">
+            {manual
+              ? "This proposal fails the safety gate. Manual review required."
+              : "Review the code diff and open the cleanup pull request."}
+          </p>
+        )}
+        {prError ? (
+          <p role="alert" className="mt-2 text-sm text-danger">
+            {prError}
+          </p>
+        ) : null}
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button disabled aria-describedby="cleanup-pr-disabled">
-            <GitPullRequest size={16} aria-hidden="true" />
-            Open cleanup PR
-          </Button>
+          {!prSuccess && (
+            <Button
+              variant="primary"
+              disabled={manual || prOpening}
+              onClick={() => void handleOpenPr()}
+              aria-describedby="cleanup-pr-info"
+            >
+              <GitPullRequest size={16} aria-hidden="true" />
+              {prOpening ? "Opening PR…" : "Open cleanup PR"}
+            </Button>
+          )}
           <Button variant="ghost" onClick={onDismiss}>
-            Dismiss preview
+            {prSuccess ? "Close" : "Dismiss preview"}
           </Button>
         </div>
       </div>

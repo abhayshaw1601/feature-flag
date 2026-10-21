@@ -147,6 +147,13 @@ export const listFlagsResponseSchema = z.object({
 });
 export type ListFlagsResponse = z.infer<typeof listFlagsResponseSchema>;
 
+export const createFlagEnvironmentInputSchema = z.object({
+  environmentKey: z.string().regex(/^[a-z0-9-]+$/),
+  enabled: z.boolean(),
+  rules: ruleSetSchema,
+});
+export type CreateFlagEnvironmentInput = z.infer<typeof createFlagEnvironmentInputSchema>;
+
 export const createFlagRequestSchema = z.object({
   key: z
     .string()
@@ -157,6 +164,7 @@ export const createFlagRequestSchema = z.object({
   description: z.string().trim().max(500).optional(),
   tags: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
   ownerId: z.string().min(1).nullable().optional(),
+  environments: z.array(createFlagEnvironmentInputSchema).max(20).optional(),
 });
 export type CreateFlagRequest = z.infer<typeof createFlagRequestSchema>;
 

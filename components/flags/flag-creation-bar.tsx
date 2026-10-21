@@ -323,11 +323,16 @@ function FlagCreationForm({
       {preview ? (
         <FlagCreationPreviewDrawer
           preview={preview}
+          projectId={projectId}
           environments={environments}
           allowProduction={allowProduction}
           returnFocusRef={returnFocusRef}
           editTargetRef={textareaRef}
           onDismiss={() => setPreview(null)}
+          onSuccess={() => {
+            setPrompt("");
+            setPreview(null);
+          }}
         />
       ) : null}
     </section>
